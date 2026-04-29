@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click to Start</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #000;
+            font-family: sans-serif;
+        }
+
+        /* 開始ボタン（画面全体） */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #111; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; cursor: pointer;
+        }
+
+        #start-button {
+            padding: 20px 40px; font-size: 24px; font-weight: bold;
+            background: #ff0000; color: white; border: none; border-radius: 50px;
+            box-shadow: 0 0 20px rgba(255,0,0,0.5);
+        }
+
+        /* 動画コンテナ */
+        #video-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; z-index: 1;
+        }
+
+        iframe { width: 100vw; height: 100vh; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" onclick="launchVideo()">
+        <button id="start-button">クリックして開始</button>
+        <p style="margin-top: 20px; color: #888;">※音量にご注意ください</p>
+    </div>
+
+    <div id="video-wrapper">
+        <div id="player"></div>
+    </div>
+
+    <script>
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                videoId: 'dQw4w9WgXcQ',
+                playerVars: {
+                    'autoplay': 1,
+                    'mute': 1,      /* ここが重要：最初は消音で読み込む */
+                    'controls': 0,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'iv_load_policy': 3,
+                    'origin': location.origin
+                },
+                events: {
+                    'onReady': function(e) { e.target.playVideo(); } /* 裏で先に再生させておく */
+                }
+            });
+        }
+
+        function launchVideo() {
+            // 画面を切り替える
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('video-wrapper').style.display = 'block';
+
+            // 音を出して、最初から再生し直す
+            player.unMute();
+            player.setVolume(100);
+            player.seekTo(0);
+            player.playVideo();
+
+            // スマホ等で全画面モードへ
+            var elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
