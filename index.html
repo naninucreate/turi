@@ -8,10 +8,9 @@
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #000;
-            font-family: "Helvetica Neue", Arial, sans-serif;
+            font-family: sans-serif;
         }
 
-        /* 開始ボタン画面 */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; color: #fff;
@@ -20,12 +19,10 @@
         }
 
         #start-button {
-            padding: 15px 35px; font-size: 20px; font-weight: bold;
-            background: #ff0000; color: white; border: none; border-radius: 5px;
-            cursor: pointer;
+            padding: 15px 35px; font-size: 18px; font-weight: bold;
+            background: #333; color: white; border: 1px solid #555; border-radius: 4px;
         }
 
-        /* 動画表示エリア */
         #video-wrapper {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: none; z-index: 1;
@@ -37,7 +34,7 @@
 <body>
 
     <div id="start-screen" onclick="launchVideo()">
-        <button id="start-button">動画を再生する</button>
+        <button id="start-button">START</button>
     </div>
 
     <div id="video-wrapper">
@@ -45,24 +42,31 @@
     </div>
 
     <script>
-        // YouTube APIの読み込み
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         var player;
+        // 動画ID
+        const videoId = 'RrESvSRNpeo';
+        // ランダムな数値を生成（キャッシュ回避用）
+        const randomParam = Math.floor(Date.now() / 1000);
+
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
-                videoId: 'RrESvSRNpeo', // 日本語字幕版のID
+                videoId: videoId,
                 playerVars: {
                     'autoplay': 1,
-                    'mute': 1,         // エラー回避のため最初はミュート
-                    'controls': 0,     // 操作バー非表示
+                    'mute': 1,
+                    'controls': 0,
                     'modestbranding': 1,
                     'rel': 0,
                     'iv_load_policy': 3,
-                    'origin': location.origin
+                    'origin': location.origin,
+                    'widget_referrer': location.href,
+                    // カスタムパラメータとしてランダム値を付与
+                    't': randomParam 
                 },
                 events: {
                     'onReady': function(e) { e.target.playVideo(); }
@@ -71,17 +75,15 @@
         }
 
         function launchVideo() {
-            // 画面切り替え
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('video-wrapper').style.display = 'block';
 
-            // 音ありに設定して最初から再生
             player.unMute();
             player.setVolume(100);
+            // 確実に最初から再生させる
             player.seekTo(0);
             player.playVideo();
 
-            // 全画面表示のリクエスト
             var elem = document.documentElement;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
