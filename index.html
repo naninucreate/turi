@@ -3,24 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
+    <title>Video Player</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        
+        /* 開始画面のレイアウト */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
         }
-        /* 画面中央に小さな点（クリックを誘うため） */
-        #dot { width: 2px; height: 2px; background: #111; }
+
+        /* カスタム再生ボタンのデザイン */
+        .play-button {
+            width: 100px; height: 100px; background: rgba(255, 0, 0, 0.9);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); border: none; transition: transform 0.2s;
+        }
+        .play-button:hover { transform: scale(1.1); }
+        .play-button::after {
+            content: ""; display: block; width: 0; height: 0;
+            border-style: solid; border-width: 20px 0 20px 35px;
+            border-color: transparent transparent transparent #fff; margin-left: 8px;
+        }
+
         #video-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; }
-        iframe { width: 100vw; height: 100vh; border: none; }
+        iframe { width: 100vw; height: 100vh; border: none; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div id="start-screen" onclick="launchVideo()">
-        <div id="dot"></div>
+        <button class="play-button"></button>
     </div>
 
     <div id="video-wrapper">
@@ -34,42 +48,33 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         var player;
-
-        // --- 強力なランダムパラメータ群の生成 ---
-        const v_rand = Math.random().toString(36).substring(2, 15); // ランダム文字列
-        const t_rand = Date.now(); // タイムスタンプ
-        const b_rand = btoa(Math.random()).substring(0, 10); // Base64ランダム
+        // ランダムパラメータ群
+        const v_rand = Math.random().toString(36).substring(2, 10);
+        const t_rand = Date.now();
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
-                videoId: 'RrESvSRNpeo',
+                videoId: 'RrESvSRNpeo', // 日本語字幕版ID
                 playerVars: {
-                    /* 公式パラメータの最大活用 */
                     'autoplay': 1,
-                    'mute': 1,
+                    'mute': 1, // 最初はミュート必須
                     'controls': 0,
                     'disablekb': 1,
-                    'fs': 0,
                     'modestbranding': 1,
-                    'iv_load_policy': 3,
                     'rel': 0,
-                    'showinfo': 0,
                     'cc_load_policy': 1,
                     'cc_lang_pref': 'ja',
                     'widget_referrer': window.location.href,
                     'origin': location.protocol + '//' + location.host,
-                    
-                    /* 非公式・キャッシュ破壊用ダミーパラメータ */
-                    'cache-bust': t_rand,
-                    'ver': v_rand,
-                    'mode': 'full',
-                    'ext': b_rand,
-                    'sig': Math.random()
+                    /* 強力なダミーパラメータ */
+                    'cache': t_rand,
+                    'token': v_rand,
+                    'force_reload': 'true'
                 },
                 events: {
                     'onReady': function(e) {
                         e.target.playVideo();
-                        // 権限の強制上書き
+                        // 権限の強制
                         const frame = document.querySelector('iframe');
                         frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; gyroscope; picture-in-picture');
                     }
@@ -78,16 +83,17 @@
         }
 
         function launchVideo() {
-            // 画面を切り替えて音を出す
+            // UI切り替え
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('video-wrapper').style.display = 'block';
 
+            // 音あり・最初から・再生！
             player.unMute();
             player.setVolume(100);
             player.seekTo(0);
             player.playVideo();
 
-            // 全画面要求の全パターン網羅
+            // 全画面化
             const el = document.documentElement;
             const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
             if (rfs) rfs.call(el);
