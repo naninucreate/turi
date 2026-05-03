@@ -3,42 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Click to Start</title>
+    <title>Video Player</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #000;
-            font-family: sans-serif;
+            font-family: "Helvetica Neue", Arial, sans-serif;
         }
 
-        /* 開始ボタン（画面全体） */
+        /* 開始ボタン画面 */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #111; color: #fff;
+            background: #000; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 9999; cursor: pointer;
         }
 
         #start-button {
-            padding: 20px 40px; font-size: 24px; font-weight: bold;
-            background: #ff0000; color: white; border: none; border-radius: 50px;
-            box-shadow: 0 0 20px rgba(255,0,0,0.5);
+            padding: 15px 35px; font-size: 20px; font-weight: bold;
+            background: #ff0000; color: white; border: none; border-radius: 5px;
+            cursor: pointer;
         }
 
-        /* 動画コンテナ */
+        /* 動画表示エリア */
         #video-wrapper {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: none; z-index: 1;
         }
 
-        iframe { width: 100vw; height: 100vh; pointer-events: none; }
+        iframe { width: 100vw; height: 100vh; border: none; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div id="start-screen" onclick="launchVideo()">
-        <button id="start-button">クリックして開始</button>
-        <p style="margin-top: 20px; color: #888;">※音量にご注意ください</p>
+        <button id="start-button">動画を再生する</button>
     </div>
 
     <div id="video-wrapper">
@@ -46,6 +45,7 @@
     </div>
 
     <script>
+        // YouTube APIの読み込み
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -54,34 +54,34 @@
         var player;
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
-                videoId: 'dQw4w9WgXcQ',
+                videoId: 'RrESvSRNpeo', // 日本語字幕版のID
                 playerVars: {
                     'autoplay': 1,
-                    'mute': 1,      /* ここが重要：最初は消音で読み込む */
-                    'controls': 0,
+                    'mute': 1,         // エラー回避のため最初はミュート
+                    'controls': 0,     // 操作バー非表示
                     'modestbranding': 1,
                     'rel': 0,
                     'iv_load_policy': 3,
                     'origin': location.origin
                 },
                 events: {
-                    'onReady': function(e) { e.target.playVideo(); } /* 裏で先に再生させておく */
+                    'onReady': function(e) { e.target.playVideo(); }
                 }
             });
         }
 
         function launchVideo() {
-            // 画面を切り替える
+            // 画面切り替え
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('video-wrapper').style.display = 'block';
 
-            // 音を出して、最初から再生し直す
+            // 音ありに設定して最初から再生
             player.unMute();
             player.setVolume(100);
             player.seekTo(0);
             player.playVideo();
 
-            // スマホ等で全画面モードへ
+            // 全画面表示のリクエスト
             var elem = document.documentElement;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
