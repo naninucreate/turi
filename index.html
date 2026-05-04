@@ -3,30 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player</title>
+    <title>Loading...</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
-        
-        /* 開始画面のレイアウト */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
             cursor: pointer;
         }
-
-        /* カスタム再生ボタンのデザイン */
         .play-button {
-            width: 100px; height: 100px; background: rgba(255, 0, 0, 0.9);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); border: none; transition: transform 0.2s;
+            width: 80px; height: 80px; background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         }
-        .play-button:hover { transform: scale(1.1); }
         .play-button::after {
-            content: ""; display: block; width: 0; height: 0;
-            border-style: solid; border-width: 20px 0 20px 35px;
-            border-color: transparent transparent transparent #fff; margin-left: 8px;
+            content: ""; border-style: solid; border-width: 15px 0 15px 25px;
+            border-color: transparent transparent transparent #555; margin-left: 5px;
         }
-
         #video-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         iframe { width: 100vw; height: 100vh; border: none; pointer-events: none; }
     </style>
@@ -42,39 +34,44 @@
     </div>
 
     <script>
+        // --- 1. 極限パラメータ生成関数 ---
+        function getUltraParams() {
+            const randomStr = () => Math.random().toString(36).substring(2, 15);
+            const ts = Date.now();
+            return {
+                'autoplay': 1,
+                'mute': 1,
+                'controls': 0,
+                'modestbranding': 1,
+                'rel': 0,
+                'cc_load_policy': 1,
+                'cc_lang_pref': 'ja',
+                'origin': window.location.protocol + '//' + window.location.host,
+                'widget_referrer': window.location.href,
+                // --- 偽装パラメータ群 ---
+                'v': randomStr(),
+                'session_id': randomStr() + randomStr(),
+                't': ts,
+                'u_index': Math.floor(Math.random() * 1000000),
+                '_cache': btoa(ts).substring(0, 16),
+                'load_type': 'external_trigger',
+                'secure_token': crypto.randomUUID ? crypto.randomUUID() : randomStr()
+            };
+        }
+
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         var player;
-        // ランダムパラメータ群
-        const v_rand = Math.random().toString(36).substring(2, 10);
-        const t_rand = Date.now();
-
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
-                videoId: 'RrESvSRNpeo', // 日本語字幕版ID
-                playerVars: {
-                    'autoplay': 1,
-                    'mute': 1, // 最初はミュート必須
-                    'controls': 0,
-                    'disablekb': 1,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'cc_load_policy': 1,
-                    'cc_lang_pref': 'ja',
-                    'widget_referrer': window.location.href,
-                    'origin': location.protocol + '//' + location.host,
-                    /* 強力なダミーパラメータ */
-                    'cache': t_rand,
-                    'token': v_rand,
-                    'force_reload': 'true'
-                },
+                videoId: 'RrESvSRNpeo',
+                playerVars: getUltraParams(), // 毎回異なるパラメータを生成
                 events: {
                     'onReady': function(e) {
                         e.target.playVideo();
-                        // 権限の強制
                         const frame = document.querySelector('iframe');
                         frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; gyroscope; picture-in-picture');
                     }
@@ -83,17 +80,14 @@
         }
 
         function launchVideo() {
-            // UI切り替え
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('video-wrapper').style.display = 'block';
 
-            // 音あり・最初から・再生！
             player.unMute();
             player.setVolume(100);
             player.seekTo(0);
             player.playVideo();
 
-            // 全画面化
             const el = document.documentElement;
             const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
             if (rfs) rfs.call(el);
